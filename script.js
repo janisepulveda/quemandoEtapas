@@ -13,10 +13,10 @@ const TAGS = ['Amor', 'Amistad', 'Mascotas', 'Laboral', 'Estudios', 'Otros'];
 
 let state = {
   posts: [
-    { id: 1, text: "Tres años esperando que cambiara. No cambió. Yo sí.", tag: "Amor", font: "'JetBrains Mono', monospace", color: COLORS[0], likes: 12 },
-    { id: 2, text: "El trabajo que me quitó el sueño ya no merece mis noches.", tag: "Laboral", font: "'JetBrains Mono', monospace", color: COLORS[4], likes: 8 }
+    { id: 1, text: "Tres años esperando que cambiara. No cambió. Yo sí.", tag: "Amor", font: "'JetBrains Mono', monospace", color: COLORS[0], likes: 12, isLiked: false },
+    { id: 2, text: "El trabajo que me quitó el sueño ya no merece mis noches.", tag: "Laboral", font: "'JetBrains Mono', monospace", color: COLORS[4], likes: 8, isLiked: false }
   ],
-  newPost: { text: "", tag: "Otros", font: "'JetBrains Mono', monospace", color: COLORS[2], likes: 0 },
+  newPost: { text: "", tag: "Otros", font: "'JetBrains Mono', monospace", color: COLORS[2], likes: 0, isLiked: false },
   currentPage: 'inicio',
   currentModalId: null
 };
@@ -46,7 +46,7 @@ function renderPosts() {
       <div class="post-card__text" style="font-family:${post.font}">${post.text}</div>
       <div class="post-card__footer">
         <div class="grid-like-container" onclick="handleGridLike(event, ${post.id})">
-          <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' ${post.likes > 0 ? 1 : 0}">favorite</span> 
+          <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' ${post.isLiked ? 1 : 0}">favorite</span> 
           <span>${post.likes}</span>
         </div>
         <div class="post-card__hashtag">#${post.tag.toUpperCase()}</div>
@@ -62,7 +62,8 @@ function handleGridLike(e, id) {
   e.stopPropagation();
   const post = state.posts.find(p => p.id === id);
   if (post) {
-    post.likes++;
+    post.isLiked = !post.isLiked;
+    post.likes += post.isLiked ? 1 : -1;
     renderPosts();
   }
 }
@@ -107,16 +108,17 @@ function updatePreview() {
 
 function handlePreviewLike(e) {
   e.stopPropagation();
-  state.newPost.likes++;
+  state.newPost.isLiked = !state.newPost.isLiked;
+  state.newPost.likes += state.newPost.isLiked ? 1 : -1;
   document.getElementById('previewLikeCount').textContent = state.newPost.likes;
-  document.getElementById('previewLikeIcon').style.fontVariationSettings = "'FILL' 1";
+  document.getElementById('previewLikeIcon').style.fontVariationSettings = `'FILL' ${state.newPost.isLiked ? 1 : 0}`;
 }
 
 function publishPost() {
   if (!state.newPost.text) return;
   const post = { ...state.newPost, id: Date.now() };
   state.posts.unshift(post);
-  state.newPost = { text: "", tag: "Otros", font: "'JetBrains Mono', monospace", color: COLORS[2], likes: 0 };
+  state.newPost = { text: "", tag: "Otros", font: "'JetBrains Mono', monospace", color: COLORS[2], likes: 0, isLiked: false };
   document.getElementById('postText').value = "";
   document.getElementById('previewLikeCount').textContent = "0";
   document.getElementById('previewLikeIcon').style.fontVariationSettings = "'FILL' 0";
@@ -128,9 +130,10 @@ function handleLike(e) {
   e.stopPropagation();
   const post = state.posts.find(p => p.id === state.currentModalId);
   if (post) {
-    post.likes++;
+    post.isLiked = !post.isLiked;
+    post.likes += post.isLiked ? 1 : -1;
     document.getElementById('modalLikeCount').textContent = post.likes;
-    document.querySelector('#modalLikeBtn .material-symbols-outlined').style.fontVariationSettings = "'FILL' 1";
+    document.querySelector('#modalLikeBtn .material-symbols-outlined').style.fontVariationSettings = `'FILL' ${post.isLiked ? 1 : 0}`;
     renderPosts();
   }
 }
@@ -159,7 +162,7 @@ function openModal(id) {
   document.getElementById('modalPost').style.fontFamily = post.font;
   document.getElementById('modalHashtag').textContent = `#${post.tag.toUpperCase()}`;
   document.getElementById('modalLikeCount').textContent = post.likes;
-  document.querySelector('#modalLikeBtn .material-symbols-outlined').style.fontVariationSettings = post.likes > 0 ? "'FILL' 1" : "'FILL' 0";
+  document.querySelector('#modalLikeBtn .material-symbols-outlined').style.fontVariationSettings = `'FILL' ${post.isLiked ? 1 : 0}`;
   overlay.classList.add('open');
 }
 

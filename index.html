@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quemando Ciclos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="nav__container">
+      <span class="nav__brand">quemando ciclos</span>
+      <ul class="nav__links">
+        <li><a href="#" class="nav__link nav__link--active" data-page="inicio" onclick="navigationHandler(event)">Inicio</a></li>
+        <li><a href="#" class="nav__link" data-page="terminos" onclick="navigationHandler(event)">Términos</a></li>
+        <li><a href="#" class="nav__link" data-page="nosotros" onclick="navigationHandler(event)">Nosotros</a></li>
+      </ul>
+      <button class="nav__cta" onclick="showPage('publicar')">+ quemar etapa</button>
+    </div>
+  </nav>
+
+  <main id="page-inicio" class="page page--active">
+    <header class="page-header">
+      <h1 class="page-title">Post recientes</h1>
+    </header>
+    <div class="posts-grid" id="postsGrid"></div>
+  </main>
+
+  <main id="page-publicar" class="page">
+    <header class="page-header">
+      <h1 class="page-title">Personaliza tu post</h1>
+    </header>
+    <div class="publish-layout">
+      <div class="preview-panel">
+        <div class="post-preview" id="postPreview">
+          <div class="post-preview__inner">
+            <textarea class="post-textarea-inline" id="postText" placeholder="Escribe aquí..." maxlength="500"></textarea>
+          </div>
+          <div class="post-preview__hashtag" id="previewHashtag">#CATEGORÍA</div>
+        </div>
+      </div>
+
+      <div class="controls-panel">
+        <div class="control-group">
+          <h3 class="control-label">Categoría</h3>
+          <div class="tags-grid" id="tagsGrid"></div>
+        </div>
+
+        <div class="control-group">
+          <h3 class="control-label">Tipografía</h3>
+          <select class="font-select" id="fontSelect">
+            <option value="'JetBrains Mono', monospace">JetBrains Mono</option>
+            <option value="'Inter', sans-serif">Inter Sans</option>
+            <option value="'Georgia', serif">Georgia Serif</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <h3 class="control-label">Color</h3>
+          <div class="color-grid" id="colorGrid"></div>
+        </div>
+
+        <button class="publish-btn" onclick="publishPost()">Publicar</button>
+      </div>
+    </div>
+  </main>
+
+  <main id="page-terminos" class="page">
+    <h2 class="page-title">Términos y Condiciones</h2>
+    <p>Registro anónimo de fin de ciclos.</p>
+  </main>
+
+  <main id="page-nosotros" class="page">
+    <h2 class="page-title">Nosotros</h2>
+    <p>Archivo colaborativo de etapas concluidas.</p>
+  </main>
+
+  <div class="modal-overlay" id="modalOverlay" onclick="closeModal()">
+    <div class="modal" id="modal" onclick="event.stopPropagation()">
+      <div class="modal__post" id="modalPost"></div>
+      <div class="modal__footer">
+        <button class="modal__action" onclick="handleLike(event)">
+          <span class="icon">heart</span> <span id="modalLikeCount">0</span>
+        </button>
+        <div id="modalHashtag" class="modal__hashtag"></div>
+        <button class="modal__action" onclick="share()">
+          <span class="icon">ExternalLink</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -305,3 +305,157 @@ function reportPost() {
   closeModal();
   showToast('Publicación reportada y oculta');
 }
+
+/* ══════════════════════════════════════
+   SHARE FIX — agregar al final de script.js
+   (reemplaza también la función sharePost existente)
+══════════════════════════════════════ */
+
+async function sharePost(id) {
+  const post = state.posts.find(p => p.id === id);
+  if (!post) return;
+
+  showToast('Generando imagen...');
+
+  // 1 — Crear el nodo del post-it temporalmente fuera de pantalla
+  const node = buildShareNode(post);
+  document.body.appendChild(node);
+
+  try {
+    // 2 — Capturar con html2canvas
+    const canvas = await html2canvas(node, {
+      scale: 3,                  // alta resolución para stories
+      backgroundColor: null,
+      useCORS: true,
+      logging: false,
+    });
+
+    document.body.removeChild(node);
+
+    // 3 — Convertir a blob
+    const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+    const file = new File([blob], 'postdata.png', { type: 'image/png' });
+
+    // 4a — En móvil: Web Share API (abre selector de apps directo)
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({
+        files: [file],
+        title: 'Postdata',
+        text: `"${post.text}" — postdata.app`,
+      });
+      return;
+    }
+
+    // 4b — En desktop: descargar la imagen
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'postdata.png';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Imagen descargada — ¡compártela donde quieras!');
+
+  } catch (err) {
+    if (document.body.contains(node)) document.body.removeChild(node);
+    // Si el usuario canceló el share no mostramos error
+    if (err.name !== 'AbortError') showToast('No se pudo generar la imagen');
+  }
+}
+
+/* Construye un div post-it listo para capturar */
+function buildShareNode(post) {
+  const SIZE = 540; // px — proporción cuadrada ideal para stories/feed
+
+  const wrap = document.createElement('div');
+  wrap.style.cssText = `
+    position: fixed;
+    left: -9999px;
+    top: 0;
+    width: ${SIZE}px;
+    height: ${SIZE}px;
+    background: ${post.color.bg};
+    color: ${post.color.text};
+    font-family: ${post.font};
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 44px 36px;
+    box-sizing: border-box;
+    border-radius: 4px;
+  `;
+
+  // Cinta adhesiva
+  const tape = document.createElement('div');
+  tape.style.cssText = `
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 72px;
+    height: 28px;
+    background: rgba(255,255,255,.55);
+    border: 1px solid rgba(0,0,0,.08);
+    border-radius: 2px;
+  `;
+  wrap.appendChild(tape);
+
+  // Texto del post
+  const txt = document.createElement('p');
+  txt.textContent = post.text;
+  txt.style.cssText = `
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 28px;
+    line-height: 1.55;
+    word-break: break-word;
+    width: 100%;
+    margin: 0;
+    font-family: ${post.font};
+  `;
+  // html2canvas no soporta display:flex en <p>, usamos div
+  const txtWrap = document.createElement('div');
+  txtWrap.style.cssText = `
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  `;
+  txtWrap.appendChild(txt);
+  wrap.appendChild(txtWrap);
+
+  // Separador
+  const sep = document.createElement('div');
+  sep.style.cssText = `
+    width: 100%;
+    height: 1px;
+    background: rgba(0,0,0,.12);
+    margin: 16px 0 12px;
+  `;
+  wrap.appendChild(sep);
+
+  // Footer: hashtag + marca
+  const footer = document.createElement('div');
+  footer.style.cssText = `
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    font-family: 'Raleway', sans-serif;
+    opacity: .55;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+  `;
+  footer.innerHTML = `
+    <span>#${post.tag.toUpperCase()}</span>
+    <span>postdata</span>
+  `;
+  wrap.appendChild(footer);
+
+  return wrap;
+}
